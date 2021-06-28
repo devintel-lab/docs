@@ -68,6 +68,11 @@ These are the steps for training mask-rcnn on a new dataset.
             or isinstance(dataset, datasets.PBJDataset)
             ```
             to the end of this ```if``` statement before the final "```:```"
+    - Add this new dataset in the COCO evaluation [```__init__.py```](https://github.com/devintel-lab/maskrcnn-benchmark/blob/master/maskrcnn_benchmark/data/datasets/evaluation/coco/__init__.py#L15) file.
+        - Necessary edits:
+            - [import the new dataset](https://github.com/devintel-lab/maskrcnn-benchmark/blob/master/maskrcnn_benchmark/data/datasets/evaluation/coco/__init__.py#L3) definition at the top
+            - add the new dataset to the end of the [isinstance() checks](https://github.com/devintel-lab/maskrcnn-benchmark/blob/master/maskrcnn_benchmark/data/datasets/evaluation/coco/__init__.py#L15)
+
 1. Create a training/inference config file
     - maskrcnn expects a config file to be passed in as a command line argument when running training as well as inference. These config files (in YAML format) are located in the [```configs```](https://github.com/devintel-lab/maskrcnn-benchmark/tree/master/configs) directory of the repo. 
     - You can use the [HOME multipot training config](https://github.com/devintel-lab/maskrcnn-benchmark/blob/master/configs/e2e_faster_rcnn_R_50_FPN_1x_HOME_multipot.yaml) file as as a reference point to make your own config file. You'll need to change a couple values here:
@@ -77,7 +82,8 @@ These are the steps for training mask-rcnn on a new dataset.
 1. Create a new pretrained backbone for this new dataset.
     - Rather than training the backbone from scratch, we use a pretrained detectron backbone. Before we can use it though, we need to trim it using the [```trim_detectron_model.py```](https://github.com/devintel-lab/maskrcnn-benchmark/blob/master/tools/trim_detectron_model.py) script. Run the script with the following argument:
         - ```
-            python trim_detectron_model.py --save_path ./pretrained_models/timmed_model.pth --cfg PATH_TO_CONFIG_FILE```
+            python trim_detectron_model.py --save_path ./pretrained_models/timmed_model.pth --cfg PATH_TO_CONFIG_FILE
+            ```
         - this will output a new pretrained model at the path specified by the --save_path argument. You must then add the path to this pretrained model to the config file, editing the ```MODEL.WEIGHT``` field in the config.
 
 
