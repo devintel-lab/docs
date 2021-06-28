@@ -39,7 +39,7 @@ These are the steps for training mask-rcnn on a new dataset.
             - the experiment number, e.g. '15'
         - There are more arguments you can set which are outlined in the argument parsing [section](https://github.com/devintel-lab/home2coco/blob/master/home2coco.py#L42) of the script, but the only required ones for this step are those mentioned above. Some of these will become necessary when building the inference dataset json (as opposed to the training dataset)
     - The output from this script is a json file that contains a record of all the images and associated ground truth bounding box annotations. 
-    - You need to add this json file to the ```data``` directory of the ```maskrcnn-benchmark``` repository located on salk (*NOTE*: this folder is not present on the github copy of the repo, only the Salk version, which is located at ```/data/aamatuni/code/obj_loc```)
+    - You need to add this json file to the ```datasets``` directory of the ```maskrcnn-benchmark``` repository located on salk. If this is a new type of dataset, you should create a new folder within ```datasets```, for example, ```datasets/pbj``` (*NOTE*: this datasets folder is not present on the github copy of the repo, only the Salk version, which is located at ```/data/aamatuni/code/obj_loc```)
 1. Add paths for image directory and dataset json to [```paths_catalog.py```](https://github.com/devintel-lab/maskrcnn-benchmark/blob/master/maskrcnn_benchmark/config/paths_catalog.py)
     - This registers an entry for the dataset annotation files and image directory paths for maskrcnn to use.
     - Here is an example entry for the training dataset for exp15
@@ -49,10 +49,19 @@ These are the steps for training mask-rcnn on a new dataset.
                     "ann_file": "home/annotations/train15_multipot.json"
                 },
         ```
-        For this entry the directory with all the training images is ```data/home/train15```, while the dataset json is a file called ```train15_multipot.json``` and located in ```data/home/annotations```. Note that all these paths are relative to the ```data``` directory of the maskrcnn-benchmark repo. The name of this entry is ```"home_15_train_multipot"```. You should give your dataset a unique name that's easily interpretable. 
+        For this entry the directory with all the training images is ```datasets/home/train15```, while the annotation json is a file called ```train15_multipot.json``` and located in ```datasets/home/annotations```. Note that all these path entries are relative to the ```datasets``` directory of the maskrcnn-benchmark repo. The name of this example entry is ```"home_15_train_multipot"```. You should give your dataset a unique name that's easily interpretable. 
+    - Add a new ```elif``` condition to the [```get()```](https://github.com/devintel-lab/maskrcnn-benchmark/blob/master/maskrcnn_benchmark/config/paths_catalog.py#L269) dataset loading function to handle this new type of dataset. You can copy and paste the [block for the "home" dataset](https://github.com/devintel-lab/maskrcnn-benchmark/blob/master/maskrcnn_benchmark/config/paths_catalog.py#L292) and modify it to refer to your new dataset, e.g. ```"pbj"``` and ```PBJDataset```
 1. Create a new dataset definition in the [```datasets```](https://github.com/devintel-lab/maskrcnn-benchmark/tree/master/maskrcnn_benchmark/data/datasets) module of the ```maskrcnn-benchmark``` repo
     - Each dataset is defined here within its own python file. You'll notice that there's already entries here for the [```home```](https://github.com/devintel-lab/maskrcnn-benchmark/blob/master/maskrcnn_benchmark/data/datasets/home.py) dataset and the [```toyroom```](https://github.com/devintel-lab/maskrcnn-benchmark/blob/master/maskrcnn_benchmark/data/datasets/toyroom.py) datasets. Use these as a point of reference when defining your new dataset.
+        - Necessary edits:
+            - Change the [class name](https://github.com/devintel-lab/maskrcnn-benchmark/blob/master/maskrcnn_benchmark/data/datasets/home.py#L21) for your new dataset, e.g. ```class PBJDataset```
+            - Change the [super class invocation](https://github.com/devintel-lab/maskrcnn-benchmark/blob/master/maskrcnn_benchmark/data/datasets/home.py#L28) to match the new class name, e.g. ```super(PBJDataset, self).__init__(root, ann_file)```
+            - [```self.categories```](https://github.com/devintel-lab/maskrcnn-benchmark/blob/master/maskrcnn_benchmark/data/datasets/home.py#L32) need to be updated for the new set of detection categories,
+            - change the [dataset class name](https://github.com/devintel-lab/maskrcnn-benchmark/blob/master/maskrcnn_benchmark/data/datasets/home.py#L65) in the super class invocation within the \_\_get_item__ function.
     - Add the name of this new dataset (i.e. the name of the class you defined in the python file you just created, e.g. ```HOMEDataset``` or  ```ToyroomDataset```), to this [```__init__.py```](https://github.com/devintel-lab/maskrcnn-benchmark/blob/master/maskrcnn_benchmark/data/datasets/__init__.py) file.
+        - Necessary edits:
+            - [import](https://github.com/devintel-lab/maskrcnn-benchmark/blob/master/maskrcnn_benchmark/data/datasets/__init__.py#L8) the new dataset class like the others
+            - add the name of the new class to the [\_\_all\_\_](https://github.com/devintel-lab/maskrcnn-benchmark/blob/master/maskrcnn_benchmark/data/datasets/__init__.py#L11) list.
     - Add this new dataset as one of the conditions in the evaluation [```__init__.py```](https://github.com/devintel-lab/maskrcnn-benchmark/blob/master/maskrcnn_benchmark/data/datasets/evaluation/__init__.py#L21) file.
         - you'll need to add it so that this new dataset class is evaluated as if it were a ```COCODataset```. You'll nontice the ```HOMEDataset``` and ```ToyroomDataset``` classes are also handled as if they were a ```COCODataset```. Your new dataset should be appended at the end of this 'if' statement so that it's handled the same as these. For example, if your dataset class is called ```PBJDataset```, then you should append 
             ```
@@ -65,6 +74,12 @@ These are the steps for training mask-rcnn on a new dataset.
         - ```NUM_CLASSES``` - should be the number of distinct object classes in your dataset + 1. So if you have 10 objects, ```NUM_CLASSES``` should be 11. 
         - ```DATASETS``` - should be the names of the entries you added to the ```paths_catalog.py``` file in step 3 for your new dataset. If this was the exp15 multipot training dataset from the example in step 3, then the name you would add here would be ```"home_15_train_multipot"```
         - ```OUTPUT_DIR``` - this is where maskrcnn will save checkpoints and detections
+1. Create a new pretrained backbone for this new dataset.
+    - Rather than training the backbone from scratch, we use a pretrained detectron backbone. Before we can use it though, we need to trim it using the [```trim_detectron_model.py```](https://github.com/devintel-lab/maskrcnn-benchmark/blob/master/tools/trim_detectron_model.py) script. Run the script with the following argument:
+        - ```
+            python trim_detectron_model.py --save_path ./pretrained_models/timmed_model.pth --cfg PATH_TO_CONFIG_FILE```
+        - this will output a new pretrained model at the path specified by the --save_path argument. You must then add the path to this pretrained model to the config file, editing the ```MODEL.WEIGHT``` field in the config.
+
 
 
 ## Run Training
