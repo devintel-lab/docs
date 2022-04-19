@@ -91,7 +91,7 @@ Here's an example of a training JSON file with annotations:
 ]
 ```
 
-This example dataset has 2 images, where the first image has 2 ground truth boxes annotated, and the second image has only 1 bounding box annotated. The ```"category_id"``` key in each box annotation contains the class of each bounding box (i.e. the category of object, e.g. "bison" = 0, "aligator" = 1, etc...)
+This example dataset has 2 images, where the first image has 2 ground truth boxes annotated, and the second image has only 1 bounding box annotated. The ```"category_id"``` key in each box annotation contains the class of each bounding box (i.e. the category of object, e.g. "bison" = 0, "aligator" = 1, etc...). Bounding boxes are encoded in XYWH format, that is, X and Y coordinates for the upper left corner of the box, along with the width and height of the box in absolute coordinates. This format is specified by the ```"bbox_mode"``` key, which can take one of [5 different values](https://detectron2.readthedocs.io/en/latest/modules/structures.html#detectron2.structures.BoxMode).
 
 Here's an example of an inference dataset (i.e. no ground truth boxes) containing only 2 images:
 
@@ -171,6 +171,25 @@ from detectron2.evaluation import COCOEvaluator
 MetadataCatalog.get("home15_train").set(evaluator_type="coco")
 
 ```
+
+
+### Creating a Training Dataset from Outputs of Sven's Annotation Program
+
+We have an annotation program that was written by Sven Bambach, a previous grad student. These are steps for processing these outputs into detectron2 formatted JSON files:
+
+1. Annotate ground truth bounding boxes for the dataset using Sven's [annotation tool](https://github.com/devintel-lab/yolo_processing/blob/master/coding_tools/OBJECT_BOX_GUI_HOME/label_toys.m)
+    - after these annotations have been completed, run the [```create_training_data_from_annotations.m```](https://github.com/devintel-lab/yolo_processing/blob/master/prepare_training_data/create_training_data_from_annotations.m) function on the directory where the annotation software saved outputs (which should be .mat files). This will generate a directory that has the following structure:
+        - ```JPEGImages``` 
+            - directory containing all the images that were annotated
+        - ```labels```
+            - directory containing a record of all the ground truth bounding box annotations
+        - ```training.txt```
+            - a manifest file containing a list of all the annotated images
+1. Run the [home2detectron2.py](https://github.com/devintel-lab/detectron2/blob/main/datasets/home2detectron2.py) utility script to convert these outputs into a detectron2 JSON file.
+     - ```
+        $ python home2detectron2.py --data_dir /path/to/dir/with/training.txt --test_pct 10
+        ```
+    - This script requires 2 input argument, ```--data_dir```, which is the directory that contains the JPEGImages, labels and training.txt outputs from Sven's program, and ```--test_pct```, which is the percent of images you want to designate to be held out for testing purposes. The name of the dataset (and the output JSON files) will be whatever is the name of the ```--data_dir```, so make sure to give this folder an informative name.
 
 
 # Training
