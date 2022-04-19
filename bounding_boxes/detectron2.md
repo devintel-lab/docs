@@ -187,7 +187,7 @@ $ python train_net.py --config-file ../configs/COCO-Detection/faster_rcnn_R_50_F
 
 This will begin training and output checkpointed model weights to the directory specified in the ```OUTPUT_DIR``` parameter in the config file.
 
-For this example, before we start training, we'll also have to make sure to import the dataset registration script we defined earlier so that detectron2 knows about our datasets, by adding it as an import to the top of the [```train_net.py```](https://github.com/devintel-lab/detectron2/blob/main/tools/train_net.py) script:
+For this example, before we start training, we'll also have to make sure to import the dataset registration script we defined earlier so that detectron2 knows about our datasets. To do this, add the registration script as an import to the top of the [```train_net.py```](https://github.com/devintel-lab/detectron2/blob/main/tools/train_net.py) script:
 
 
 ```python
@@ -203,7 +203,7 @@ Assuming you generated an inference dataset JSON and registered that dataset wit
 
 We have an example inference config you can check out [here](https://github.com/devintel-lab/detectron2/blob/main/configs/COCO-Detection/faster_rcnn_R_50_FPN_3x_HOME15_RANDOMSAMPLE_INFERENCE.yaml). This config uses the ```home15_randomsample_inference``` dataset, which was generated using ```make_inference_set.py```, and refers to a set of ~2200 randomly rample images from experiment 15. 
 
-You'll notice that in this config file the ```WEIGHTS``` parameter is a path pointing to the latest checkpointed weights from a trained model: ```"/data/code/obj_loc/detectron2/tools/output/faster_rcnn_R_50_FPN_3x_HOME15.yaml/model_0074999.pth"```. This is the set of weights learned by a model trained using the ```faster_rcnn_R_50_FPN_3x_HOME15.yaml``` config file, but applied for detecting boxes in the  ```home15_randomsample_inference``` dataset.
+You'll notice that in this config file the ```WEIGHTS``` parameter is a path pointing to the latest checkpointed weights from a previously trained model: ```"/data/code/obj_loc/detectron2/tools/output/faster_rcnn_R_50_FPN_3x_HOME15.yaml/model_0074999.pth"```. This is the set of weights learned by a model trained using the ```faster_rcnn_R_50_FPN_3x_HOME15.yaml``` config file, but applied for detecting boxes in the  ```home15_randomsample_inference``` dataset.
 
 To run inference you'll again be calling the [```train_net.py```](https://github.com/devintel-lab/detectron2/blob/main/tools/train_net.py) script:
 
@@ -213,9 +213,9 @@ $ python train_net.py --config-file ../configs/COCO-Detection/faster_rcnn_R_50_F
 
 Notice the ```--eval-only``` flag we also pass in here. This tells the detectron2 system that we're not doing any training here, we're just evaluating.
 
-This step will produce a set of results in a folder named ```inference``` in the ```OUTPUT_DIR``` specified in the config. The bounding box detections will be in a file called ```coco_instances_results.json```, and a manifest of all the images and their ID's will be in a file called ```{dataset_name}_coco_format.json```. The ```coco_instances_results.json``` file will tell you that an image with id X has certain boxes detected, and the ```{dataset_name}_coco_format.json``` will tell you which image ID corresponds to which image file.
+This step will produce a set of results in a folder named ```inference``` in the ```OUTPUT_DIR``` specified in the config. The bounding box detections will be in a file called ```coco_instances_results.json```, and a manifest of all the images and their ID's will be in a file called ```{dataset_name}_coco_format.json```. The ```coco_instances_results.json``` file will tell you that an image with id X has certain boxes detected, and the ```{dataset_name}_coco_format.json``` file will tell you which image ID corresponds to which image file.
 
-To visualize these detections we have a helper utility script that can generate a collage of all the the detections in each category.
+To visualize these detections we have a few helper utility scripts that can generate a collage of all the the detections in each category.
 
 
 # Checking Detections
