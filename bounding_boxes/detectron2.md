@@ -114,9 +114,9 @@ Here's an example of an inference dataset (i.e. no ground truth boxes) containin
 ]
 ```
 
-There's a helper utility script available if you want to generate an inference JSON file and all you have a folder full of images you want to detect boxes for. This script is in the ```datasets``` directory and called [make_inference_set.py](https://github.com/devintel-lab/detectron2/blob/main/datasets/make_inference_set.py).
+There's a helper utility script available if you want to generate an inference JSON file and all you have is a folder full of images you want to detect boxes for. This script, [make_inference_set.py](https://github.com/devintel-lab/detectron2/blob/main/datasets/make_inference_set.py), is in the ```datasets``` directory.
 
-To run this script, provide it with 3 argument:
+To run this script, you need to provide it with 3 argument:
 
 ```
 $ python make_inference_set.py --image_dir /path/to/dir/with/images --dataset_name my_dataset --output_dir /path/to/output/dir
@@ -127,9 +127,9 @@ This script will read all the images in the directory specified by the ```--imag
 
 ### 2) Register a Dataset with detectron2
 
-This step is where you tell detectron2 how to load the data from the JSON file you made in step 1). To do this you must "register" the dataset
+This step is where you tell detectron2 how to load the data from the JSON file you made in step 1). To do this you must "register" the dataset.
 
-You can see an example [dataset registration script](https://github.com/devintel-lab/detectron2/blob/main/datasets/home15.py) for experiment 15 in the dataset folder of the detectron2 repo.
+You can see an example of a [dataset registration script](https://github.com/devintel-lab/detectron2/blob/main/datasets/home15.py) for experiment 15 in the dataset folder of the detectron2 repo.
 
 This involves defining a function which returns a list of python dictionaries with all the dataset info. This list of dictionaries are what's encoded in the JSON file we made in step 1), and we can load and return this data structure as demonstrated in the dataset registration script mentioned previously:
 
@@ -175,7 +175,7 @@ MetadataCatalog.get("home15_train").set(evaluator_type="coco")
 
 # Training
 
-To train a model, you'll need to first set up a config file that outlines all the parameters for training/testing your model. You can find an example config for the ```home15_train``` and ```home15_test``` dataset [here](https://github.com/devintel-lab/detectron2/blob/main/configs/COCO-Detection/faster_rcnn_R_50_FPN_3x_HOME15.yaml).
+To train a model, you'll need to first set up a config file that outlines all the parameters for training/testing your model. You can find an example config for the ```home15_train``` and ```home15_test``` dataset [here](https://github.com/devintel-lab/detectron2/blob/main/configs/COCO-Detection/faster_rcnn_R_50_FPN_3x_HOME15.yaml). 
 
 The ```home15_test``` dataset is just a set of 10% of left-out annotated frames which we can be used for testing (i.e. computing precision/recall performance).
 
@@ -186,6 +186,14 @@ $ python train_net.py --config-file ../configs/COCO-Detection/faster_rcnn_R_50_F
 ```
 
 This will begin training and output checkpointed model weights to the directory specified in the ```OUTPUT_DIR``` parameter in the config file.
+
+For this example, before we start training, we'll also have to make sure to import the dataset registration script we defined earlier so that detectron2 knows about our datasets, by adding it as an import to the top of the [```train_net.py```](https://github.com/devintel-lab/detectron2/blob/main/tools/train_net.py) script:
+
+
+```python
+sys.path.append("../datasets")
+import home15
+```
 
 # Inference
 
